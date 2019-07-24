@@ -165,6 +165,10 @@ class App extends Component {
           />
         }
 
+        <div className="note">
+          Note: You should be able to navigate with a screenreader and only &lt;TAB&gt; and &lt;SPACE&gt;.<br/>
+          &nbsp;<b>Accessible</b> villainy is <b>inclusive</b> villainy.
+        </div>
       </div>
     );
   }
@@ -258,19 +262,28 @@ class Task extends Component {
     let id = task.id;
     let checkboxId = "checkbox-" + id;
     return (
-      <li key={id} className="form-check list-group-item list-group-item-action" onClick={() => document.getElementById(checkboxId).click()}>
+      <li 
+        key={id} 
+        className="form-check list-group-item list-group-item-action" 
+      >
         {locked(id) ? 
-          <i className="fas fa-lock"></i> :
-          <input className="form-check-input" type="checkbox" value="" 
-            checked={checked(id)} 
-            id={checkboxId}
-            disabled={locked(id)}
-            onChange={() => toggle(id)}
-          />
+          <span>
+            <i className="fas fa-lock"></i> 
+            {task.task}
+          </span>
+          :
+          <span>
+            <input className="form-check-input" type="checkbox" value="" 
+              checked={checked(id)} 
+              id={checkboxId}
+              disabled={locked(id)}
+              onChange={() => {console.log("ha");toggle(id)}}
+            />
+            <label className="form-check-label wide" htmlFor={checkboxId}>
+              {task.task}
+            </label>
+          </span>
         }
-        <label className="form-check-label" htmlFor={checkboxId}>
-          {task.task}
-        </label>
       </li>
     )
   }
