@@ -61,22 +61,11 @@ const LIST =
   }
   ];
 
-const GROUP_LIST = 1;
-const GROUP = 2;
 const GROUP_NAMES = [...new Set(LIST.map(item => item.group))].sort();
 
 class App extends Component {
   constructor(props) {
     super(props);
-
-    // Map of sorted lists of tasks.
-    let groups = LIST.reduce((acc, item) => {
-      let list = acc[item.group];
-      list = list == null ? [] : list;
-      list.push(item);
-      acc[item.group] = list.sort((a,b) => a.id - b.id);
-      return acc;
-    }, {});
 
     let tasks = LIST.reduce((acc, item) => {
       acc[item.id] = item;
@@ -85,40 +74,48 @@ class App extends Component {
 
 
     this.state = {
-      mode: GROUP_LIST,
-      group: null,
-      groups: groups,
       tasks: tasks,
-      groupName: null
+      currentGroup: null
     }
 
     // this.onDismiss = this.onDismiss.bind(this);
     this.goToGroup = this.goToGroup.bind(this);
     this.goToGroupList = this.goToGroupList.bind(this);
-    this.toggleTask = this.toggleTask.bind(this);
+    this.checked = this.checked.bind(this);
+    this.toggle = this.toggle.bind(this);
     this.groupTasks = this.groupTasks.bind(this);
   }
 
-  goToGroup(group) {
+  goToGroup(groupName) {
     this.setState({
-      group: group,
-      mode: GROUP
+      currentGroup: groupName
     })
   }
 
   goToGroupList() {
     this.setState({
-      group: null,
-      mode: GROUP_LIST
+      currentGroup: null
     })
   }
 
-  toggleTask(id) {
+  checked(id) {
+    return this.state.tasks[id].completedAt != null;
+  }
 
+  toggle(id) {
+    let tasks = this.state.tasks;
+    
+    if (this.checked(id)) {
+      tasks[id].completedAt =  null;
+    } else {
+      tasks[id].completedAt = new Date();
+    }
+
+    this.setState({tasks: tasks});
   }
 
   groupTasks(groupName) {
-    this.state.tasks.filter(task => task.group === groupName);
+    return Object.values(this.state.tasks).filter(task => task.group === groupName);
   }
 
   render() {
@@ -136,19 +133,24 @@ class App extends Component {
             <img src="/villaincon.jpg" className="little-logo" alt="VillainCon logo - a globe with a villain's mask on it."/>
           </div>
         </div>
-        { this.state.mode === GROUP_LIST ? 
+        { this.state.currentGroup == null ? 
           <GroupList 
-            groups={this.state.groups} 
             goToGroup={this.goToGroup} 
             goToGroupList={this.goToGroupList}
             groupTasks={this.groupTasks}
           /> 
           : null 
         }
-        { this.state.mode === GROUP ? <Group name={this.state.group} tasks={this.state.groups[this.state.group]} goToGroupList={this.goToGroupList}/> : null }
-        {/* {Object.keys(groups).map(groupName => 
-            <Group key={groupName} name={groupName} tasks={groups[groupName]} />
-        )} */}
+        { this.state.currentGroup != null ? 
+          <Group 
+            name={this.state.currentGroup} 
+            tasks={this.groupTasks(this.state.currentGroup)} 
+            goToGroupList={this.goToGroupList}
+            checked={this.checked}
+            toggle={this.toggle}
+          />
+          : null
+        }
       </div>
     );
   }
@@ -158,9 +160,7 @@ class GroupList extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      groups: props.groups,
       goToGroup: props.goToGroup,
-      goToGroupList: props.goToGroupList,
       groupTasks: props.groupTasks
     };
 
@@ -171,9 +171,9 @@ class GroupList extends Component {
     return (
       <div className="main mx-auto">
         <ul className="list-group">
-          {Object.keys(this.state.groups).sort().map(group =>            
-            <li key={group} className="list-group-item list-group-item-action" onClick={() => this.state.goToGroup(group)}>
-              <div>{group}</div>
+          {GROUP_NAMES.map(groupName =>            
+            <li key={groupName} className="list-group-item list-group-item-action" onClick={() => this.state.goToGroup(groupName)}>
+              <div>{groupName}</div>
               <div>x out of x completed</div>
             </li>
           )}
@@ -189,7 +189,9 @@ class Group extends Component {
     this.state = {
       name: props.name,
       tasks: props.tasks,
-      goToGroupList: props.goToGroupList
+      goToGroupList: props.goToGroupList,
+      toggle: props.toggle,
+      checked: props.checked
     };
 
     // this.onDismiss = this.onDismiss.bind(this);
@@ -202,7 +204,7 @@ class Group extends Component {
         <strong>{this.state.name}</strong>
         <ul className="list-group">
           {this.state.tasks.map(task =>
-            <Task key={task.id} task={task}/>
+            <Task key={task.id} task={task} toggle={this.state.toggle} checked={this.state.checked}/>
           )}
         </ul>
       </div>
@@ -213,34 +215,24 @@ class Group extends Component {
 class Task extends Component {
   constructor(props) {
     super(props);
-    this.state = props.task;
-
-    this.checked = this.checked.bind(this);
-    this.toggle = this.toggle.bind(this);
-  }
-
-  checked() {
-    return this.state.completedAt != null;
-  }
-
-  toggle() {
-    if (this.checked()) {
-      this.setState({completedAt: null});
-    } else {
-      this.setState({completedAt: new Date()});
-    }
+    this.state = {
+      task: props.task,
+      toggle: props.toggle,
+      checked: props.checked
+    };
   }
 
   render() {
-    let checkboxId = "checkbox-" + this.state.id;
+    let id = this.state.task.id;
+    let checkboxId = "checkbox-" + id;
     return (
-      <li key={this.state.task.id} className="form-check list-group-item list-group-item-action" onClick={() => this.toggle()}>
+      <li key={id} className="form-check list-group-item list-group-item-action" onClick={() => this.state.toggle(id)}>
         <input className="form-check-input" type="checkbox" value="" 
-          checked={this.checked()} id={checkboxId}
-          onChange={() => this.toggle()}
+          checked={this.state.checked(id)} id={checkboxId}
+          onChange={() => this.state.toggle(id)}
         />
         <label className="form-check-label" htmlFor={checkboxId}>
-          {this.state.task}
+          {this.state.task.task}
         </label>
       </li>
     )
