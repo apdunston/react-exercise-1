@@ -22,6 +22,10 @@
   width: 75%;
 }
 
+.main button {
+  float: right;
+}
+
 .form-check-input {
   margin-left: 0em;
 }
