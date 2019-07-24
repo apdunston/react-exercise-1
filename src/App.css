@@ -18,12 +18,17 @@
   height: 20vmin;
 }
 
-.main {
-  width: 75%;
+.left {
+  text-align: left;
 }
 
-.main button {
-  float: right;
+.right {
+  text-align: right;
+}
+
+.main {
+  margin-top: 4em;
+  width: 75%;
 }
 
 .form-check-input {
