@@ -1,5 +1,33 @@
 .App {
+}
+
+.row {
   text-align: center;
+  display: table;
+  width: 100%; /*Optional*/
+  table-layout: fixed; /*Optional*/
+  border-spacing: 10px; /*Optional*/
+}
+
+.column {
+  display: table-cell;
+}
+
+.row .little-logo {
+  vertical-align: middle;
+  height: 20vmin;
+}
+
+.main {
+  width: 75%;
+}
+
+.form-check-input {
+  margin-left: 0em;
+}
+
+.form-check-label {
+  margin-left: 1.5em;
 }
 
 .App-logo {
