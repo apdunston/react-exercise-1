@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import './App.css';
 
+const ENTER = 13;
+const SPACE = 32;
 const LIST =
   [
     {
@@ -169,25 +171,28 @@ class App extends Component {
 }
 
 class GroupList extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      goToGroup: props.goToGroup,
-      checked: props.checked,
-      groupTasks: props.groupTasks
-    };
-  }
-
   render() {
+    const {
+      goToGroup,
+      checked,
+      groupTasks
+    } = this.props;
+
     return (
       <div className="main mx-auto">
         <ul className="list-group">
 
           { GROUP_NAMES.map(groupName => {
-            let tasks = this.state.groupTasks(groupName);
-            let checkedTasks = tasks.filter(task => this.state.checked(task.id))
+            let tasks = groupTasks(groupName);
+            let checkedTasks = tasks.filter(task => checked(task.id))
             return (           
-              <li key={groupName} className="list-group-item list-group-item-action" onClick={() => this.state.goToGroup(groupName)}>
+              <li 
+                key={groupName} 
+                className="list-group-item list-group-item-action" 
+                tabIndex={0}
+                onClick={() => goToGroup(groupName)}
+                onKeyUp={(event) => {if (event.keyCode === ENTER || event.keyCode === SPACE) { goToGroup(groupName) }}}
+              >
                 <div>{groupName}</div>
                 <div>{checkedTasks.length} out of {tasks.length} completed</div>
               </li>
@@ -201,41 +206,38 @@ class GroupList extends Component {
 }
 
 class Group extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      name: props.name,
-      tasks: props.tasks,
-      goToGroupList: props.goToGroupList,
-      toggle: props.toggle,
-      checked: props.checked,
-      locked: props.locked
-    };
-  }
-
   render() {
+    const {
+      name,
+      tasks,
+      goToGroupList,
+      toggle,
+      checked,
+      locked
+    } = this.props;
+
     return (
       <div className="main mx-auto">
         <div className="row">
           <div className="column left">
-            <strong>{this.state.name}</strong>      
+            <strong>{name}</strong>      
           </div>
           <div className="column right">
             <button 
               type="button" 
               className="btn btn-outline-secondary btn-sm" 
-              onClick={() => this.state.goToGroupList()}
+              onClick={() => goToGroupList()}
             >All Groups</button>
           </div>
         </div>
         <ul className="list-group">
-          {this.state.tasks.map(task =>
+          {tasks.map(task =>
             <Task 
               key={task.id} 
               task={task} 
-              toggle={this.state.toggle} 
-              checked={this.state.checked} 
-              locked={this.state.locked}
+              toggle={toggle} 
+              checked={checked} 
+              locked={locked}
             />
           )}
         </ul>
@@ -245,33 +247,29 @@ class Group extends Component {
 }
 
 class Task extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      task: props.task,
-      toggle: props.toggle,
-      checked: props.checked,
-      locked: props.locked
-    };
-  }
-
   render() {
-    let id = this.state.task.id;
+    const {
+      task,
+      toggle,
+      checked,
+      locked
+    } = this.props;
+
+    let id = task.id;
     let checkboxId = "checkbox-" + id;
-    let locked = this.state.locked(id);
-    console.log("rendering!");
     return (
-      <li key={id} className="form-check list-group-item list-group-item-action" onClick={() => !locked && this.state.toggle(id)}>
-        {locked ? 
+      <li key={id} className="form-check list-group-item list-group-item-action" onClick={() => document.getElementById(checkboxId).click()}>
+        {locked(id) ? 
           <i className="fas fa-lock"></i> :
           <input className="form-check-input" type="checkbox" value="" 
-            checked={this.state.checked(id)} id={checkboxId}
-            disabled={locked}
-            onChange={() => this.state.toggle(id)}
+            checked={checked(id)} 
+            id={checkboxId}
+            disabled={locked(id)}
+            onChange={() => toggle(id)}
           />
         }
         <label className="form-check-label" htmlFor={checkboxId}>
-          {this.state.task.task}
+          {task.task}
         </label>
       </li>
     )
